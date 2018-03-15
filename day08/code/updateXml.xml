@@ -1,0 +1,31 @@
+﻿<!-- 请保证该文档一定是 UTF-8编码 -->
+<updateXml>
+    <createVersion version="V002">
+        <createDb name="Photo">
+            <!-- 设备与软件关联信息 -->
+            <sql_createTable>
+                create table if not exists tb_photo(
+                name TEXT,
+                path TEXT,
+                size Integer
+                );
+            </sql_createTable>
+        </createDb>
+    </createVersion>
+    <updateStep
+        versionFrom="V001"
+        versionTo="V002">
+        <updateDb name="Photo">
+            <sql_before>alter table tb_photo rename to bak_tb_photo;</sql_before>
+            <sql_after>
+                insert into tb_photo(name, path)
+                select name,path
+                from bak_tb_photo;
+            </sql_after>
+            <sql_after>
+                drop table if exists bak_tb_photo;
+            </sql_after>
+        </updateDb>
+    </updateStep>
+
+</updateXml>
