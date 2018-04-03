@@ -45,3 +45,9 @@
 
 - Activity 插桩
 - Service 插桩
+
+# Day15 插件化(二)
+
+- 动态广播
+- PMS加载AndroidManifest.xml源码分析
+- 静态广播
