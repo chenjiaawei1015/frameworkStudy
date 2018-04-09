@@ -1,0 +1,18 @@
+01. ContextWrapper#bindService调用mBase.bindService(service, conn, flags);
+02. mBase的具体实现类为ContextImpl,即调用ContextImpl.bindService(service, conn, flags);
+03. 通过bindServiceCommon方法的ActivityManagerNative.getDefault().bindService绑定服务
+04. 第一部分ActivityManagerNative.getDefault()内部通过gDefault.get(),然后调用gDefault.create()方法
+05. IBinder b = ServiceManager.getService("activity");获取与系统连接的Binder引用
+06. 调用asInterface(b);并将Binder引用传入,获取系统连接的IActivityManager的Proxy对象,具体的实现类为ActivityManagerProxy
+07. 返回到03,然后调用ActivityManagerProxy.bindService方法
+08. 由于在ActivityManagerProxy初始化的时候,传递了Stub对象,并赋值给mRemote.那么在ActivityManagerProxy.bindService方法中,通过mRemote.transact(BIND_SERVICE_TRANSACTION, data, reply, 0)将调用IActivityManager的Stub对象(ActivityManagerNative为抽象类,具体的实现对象为ActivityManagerService)
+09. ActivityManagerService的onTransact中又会调用父类ActivityManagerNative的onTract方法
+10. ActivityManagerNative的onTract方法中,Code为BIND_SERVICE_TRANSACTION,又调用了bindService(app, token, service, resolvedType, conn, fl, callingPackage, userId)
+11. 由于子类ActivityManagerService重写了bindService方法,然后又调用了mServices.bindServiceLocked,而mServices的具体实现类为ActiveServices
+12. bindServiceLocked中对serviceConnection进行了保存,赋值给了ConnectionRecord,
+由于flag设置为了Context.BIND_AUTO_CREATE,然后会调用bringUpServiceLocked方法
+13. bringUpServiceLocked方法内部调用mAm.getProcessRecordLocked,主要目的判断服务进程是否存在及服务进程是否开启
+14. 如果进程为空(app==null),会调用mAm.startProcessLocked,内部最终通过startProcessLocked方法,内部通过通过命令启动android.app.ActivityThread
+15. 回到12的bringUpServiceLocked方法后,又调用了realStartServiceLocked,内部调用了app.thread.scheduleCreateService,继而调用ActivityThread的scheduleCreateService,通过Handler发送了CREATE_SERVICE的消息,在handleMessage中调用 handleCreateService((CreateServiceData)msg.obj),内部通过反射机制创建了Service,并执行了Service的生命周期方法onCreate 
+16. 如果进程已经启动,服务已经开启,内部会调用requestServiceBindingLocked,然后调用app.thread.scheduleCreateService,然后调用ActivityThread的scheduleCreateService方法,最终通过Handler发送了BIND_SERVICE的消息,handleMessage中回调handleBindService方法,内部调用onBind方法
+17. onBind方法执行后调用ActivityManagerNative.getDefault().publishService,即调用ActivityManagerProxy.publishService,然后调用mRemote.transact(PUBLISH_SERVICE_TRANSACTION, data, reply, 0),接着通过onTransact调用publishService,然后通过ActivityManagerService的publishService调用mServices.publishServiceLocked,最终通过c.conn.connected(r.name, service);回调给App
