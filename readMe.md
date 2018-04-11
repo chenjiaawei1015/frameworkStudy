@@ -46,8 +46,21 @@
 - Activity 插桩
 - Service 插桩
 
-# Day15 插件化(二)
+# day15 插件化(二)
 
 - 动态广播
 - PMS加载AndroidManifest.xml源码分析
 - 静态广播
+
+# day16 Hook实现集中式登录
+
+- Hook startActivity
+- Hook ActivityThread 中的 Handler
+
+# day17 Binder 原理
+
+- bind 流程源码分析
+
+# day18 Hook加载插件资源
+
+- Hook方式加载外置卡apk
