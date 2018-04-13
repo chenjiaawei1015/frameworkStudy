@@ -1,0 +1,115 @@
+ActivityClientRecord
+Intent intent;
+CompatibilityInfo compatInfo;
+LoadedApk packageInfo;	// apk表现形式
+
+case LAUNCH_ACTIVITY: {
+	Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "activityStart");
+    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;
+
+	// 获取LoadedApk
+    r.packageInfo = getPackageInfoNoCheck(r.activityInfo.applicationInfo, r.compatInfo);
+    handleLaunchActivity(r, null);
+    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+}
+
+getPackageInfoNoCheck
+getPackageInfo
+	mPackages
+		// key 包名
+		// WeakReference<LoadedApk> 
+		 final ArrayMap<String, WeakReference<LoadedApk>> mPackages
+            = new ArrayMap<String, WeakReference<LoadedApk>>();
+			
+			packageInfo =
+                    new LoadedApk(this, aInfo, compatInfo, baseLoader,
+                            securityViolation, includeCode &&
+                            (aInfo.flags&ApplicationInfo.FLAG_HAS_CODE) != 0, registerPackage);
+							
+							
+performLaunchActivity
+	Activity a = performLaunchActivity(r, customIntent);
+	
+ java.lang.ClassLoader cl = r.packageInfo.getClassLoader();
+            activity = mInstrumentation.newActivity(
+                    cl, component.getClassName(), r.intent);
+            StrictMode.incrementExpectedActivityCount(activity.getClass());
+			
+弊端
+1. Activity重名
+2. 多个插件问题(加载慢,内存高)
+3. 运行在同一个进程
+
+
+java.lang.ClassLoader cl = r.packageInfo.getClassLoader();
+// CustomClassLoader
+
+apk -> LoadedApk(packageInfo) -> classLoader
+
+目的:
+	// WeakReference<LoadedApk> final ArrayMap<String, WeakReference<LoadedApk>> mPackages= new ArrayMap<String, WeakReference<LoadedApk>>();
+	mPackages.put("包名", weakRef<LoadedApk> );
+
+
+获取 mPackages
+	获取ActivityThread -> 反射获取 mPackages	ArrayMap<String, WeakReference<LoadedApk>>
+
+获取 LoadedApk
+	从源码分析出 LoadedApk 的实例化过程
+		1. getPackageInfoNoCheck	(public)
+		2. getPackageInfo	(private)
+		3. 从缓存 mPackages 取 LoaderApk , 如果缓存有 , 直接返回
+
+	调用 getPackageInfoNoCheck
+		getPackageInfoNoCheck(ApplicationInfo ai, CompatibilityInfo compatInfo)
+
+		1. ApplicationInfo ai 获取 
+			与插件相关 代码插件Apk文件
+			
+			PackageParser # public static ApplicationInfo generateApplicationInfo(Package p, int flags, PackageUserState state)
+			
+				1. Package
+					parsePackage(File packageFile, int flags)
+				2. 0
+				3. 默认对象
+		
+
+		2. CompatibilityInfo compatInfo 获取
+			里面存在一个默认的 DEFAULT_COMPATIBILITY_INFO
+			public static final CompatibilityInfo DEFAULT_COMPATIBILITY_INFO = new CompatibilityInfo() {};
+		
+		
+为 LoadedApk 设置 ClassLoader
+	CustomClassLoader extend DexClassLoader
+	
+		public DexClassLoader(String dexPath, String optimizedDirectory, String librarySearchPath, ClassLoader parent) {
+
+		optimizedDirectory : /data/data/宿主/plguin/插件包名/odex
+		librarySearchPath : /data/data/宿主/plguin/插件包名/lib
+
+
+运行出错
+	
+	
+	final ActivityClientRecord r = (ActivityClientRecord) msg.obj;
+	r.packageInfo = getPackageInfoNoCheck(r.activityInfo.applicationInfo, r.compatInfo);	// 宿主
+	handleLaunchActivity(r, null, "LAUNCH_ACTIVITY");
+
+	// ref = mPackages.get(aInfo.packageName);
+	
+	
+修改 r.activityInfo.applicationInfo
+
+getPackageInfo
+
+	ApplicationInfo ai = null;
+        try {
+            ai = getPackageManager().getApplicationInfo(packageName,
+                    PackageManager.GET_SHARED_LIBRARY_FILES, userId);
+        } catch (RemoteException e) {
+            // Ignore
+        }
+
+        if (ai != null) {
+            return getPackageInfo(ai, compatInfo, flags);
+        }
