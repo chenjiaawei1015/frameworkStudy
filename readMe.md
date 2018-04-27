@@ -64,3 +64,15 @@
 # day18 Hook加载插件资源
 
 - Hook方式加载外置卡apk
+
+# day24 第三方库解耦/Fragment通信
+
+- 第三方库的隔离
+- 代理模式(静态代理)
+
+# day25 OkHttp源码分析
+
+- OkHttpClient的构建
+- Request的构建
+- AsynCall
+- 责任链模式
