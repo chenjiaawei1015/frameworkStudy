@@ -76,3 +76,7 @@
 - Request的构建
 - AsynCall
 - 责任链模式
+
+# day38 Rxjava框架
+
+- 链式调度手写
