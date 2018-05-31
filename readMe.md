@@ -80,3 +80,8 @@
 # day38 Rxjava框架
 
 - 链式调度手写
+
+# day39 Rxjava框架map变换
+
+- 手写map变换操作
+
