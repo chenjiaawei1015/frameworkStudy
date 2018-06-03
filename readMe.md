@@ -85,3 +85,8 @@
 
 - 手写map变换操作
 
+
+# day40 Rxjava线程切换及XUtils框架
+
+- RxJava线程切换简化版
+- IOC框架 XUtils手写
