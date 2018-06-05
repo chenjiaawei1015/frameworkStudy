@@ -90,3 +90,8 @@
 
 - RxJava线程切换简化版
 - IOC框架 XUtils手写
+
+# day42 MVP及Core层库封装
+
+- MVP 封装
+- Retrofit 网络库的封装
